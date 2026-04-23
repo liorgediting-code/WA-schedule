@@ -3,6 +3,10 @@ import Database from 'better-sqlite3'
 let instance: Database.Database | null = null
 
 export function initDb(path: string = './data/scheduler.db'): Database.Database {
+  if (instance) {
+    instance.close()
+    instance = null
+  }
   instance = new Database(path)
   instance.pragma('journal_mode = WAL')
   instance.pragma('foreign_keys = ON')
