@@ -22,7 +22,9 @@ export function createConfigRouter(db: Database.Database): Router {
     const upsertMany = db.transaction((entries: [string, string][]) => {
       for (const [key, value] of entries) upsert.run(key, value)
     })
-    const entries = Object.entries(body).filter(([k]) => (ALLOWED_KEYS as readonly string[]).includes(k)) as [string, string][]
+    const entries = Object.entries(body).filter(
+      ([k, v]) => (ALLOWED_KEYS as readonly string[]).includes(k) && typeof v === 'string'
+    ) as [string, string][]
     upsertMany(entries)
     res.json({ ok: true })
   })

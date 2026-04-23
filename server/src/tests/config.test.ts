@@ -41,4 +41,20 @@ describe('PUT /api/config', () => {
     const row = db.prepare(`SELECT value FROM config WHERE key = 'whatsapp_phone_number_id'`).get() as { value: string }
     expect(row.value).toBe('ph123')
   })
+
+  it('ignores disallowed keys', async () => {
+    await request(app).put('/api/config').send({
+      whatsapp_phone_number_id: 'ph123',
+      evil_key: 'hacked',
+    })
+    const row = db.prepare(`SELECT value FROM config WHERE key = 'evil_key'`).get()
+    expect(row).toBeUndefined()
+  })
+
+  it('overwrites existing values on second PUT', async () => {
+    await request(app).put('/api/config').send({ timezone: 'UTC' })
+    await request(app).put('/api/config').send({ timezone: 'Asia/Jerusalem' })
+    const row = db.prepare(`SELECT value FROM config WHERE key = 'timezone'`).get() as { value: string }
+    expect(row.value).toBe('Asia/Jerusalem')
+  })
 })
