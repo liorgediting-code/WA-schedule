@@ -109,4 +109,10 @@ describe('POST /api/messages/:id/retry', () => {
     const res = await request(app).post('/api/messages/m1/retry').send({ scheduled_at: now + 3600 })
     expect(res.status).toBe(400)
   })
+
+  it('returns 404 when message does not exist', async () => {
+    const now = Math.floor(Date.now() / 1000)
+    const res = await request(app).post('/api/messages/nonexistent/retry').send({ scheduled_at: now + 3600 })
+    expect(res.status).toBe(404)
+  })
 })
