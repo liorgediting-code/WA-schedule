@@ -48,3 +48,22 @@ describe('hydrate', () => {
     expect(schedule.scheduleJob).toHaveBeenCalled()
   })
 })
+
+describe('add', () => {
+  it('updates scheduled_at in DB so hydrate() uses the correct time on restart', () => {
+    const now = Math.floor(Date.now() / 1000)
+    const originalTime = now + 1000
+    const newTime = now + 7200
+    db.prepare(`
+      INSERT INTO scheduled_messages (id, recipient_id, content_type, text, scheduled_at, status, created_at)
+      VALUES ('m3', 'c1', 'text', 'test', ?, 'pending', ?)
+    `).run(originalTime, now)
+
+    const sendFn = vi.fn()
+    const scheduler = createScheduler(db, sendFn)
+    scheduler.add('m3', newTime)
+
+    const msg = db.prepare(`SELECT scheduled_at FROM scheduled_messages WHERE id = 'm3'`).get() as { scheduled_at: number }
+    expect(msg.scheduled_at).toBe(newTime)
+  })
+})

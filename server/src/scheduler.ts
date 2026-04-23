@@ -65,6 +65,9 @@ export function createScheduler(db: Database.Database, send: SendFn): Scheduler 
     },
 
     add(msgId, scheduledAt) {
+      // Update DB first so hydrate() has the correct time on restart
+      db.prepare(`UPDATE scheduled_messages SET scheduled_at = ?, status = 'pending', error = NULL WHERE id = ?`).run(scheduledAt, msgId)
+
       const msg = db.prepare(`
         SELECT m.*, c.wa_id
         FROM scheduled_messages m
