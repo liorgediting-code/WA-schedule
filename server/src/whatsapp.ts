@@ -62,7 +62,7 @@ export function createWhatsAppClient({ phoneNumberId, accessToken }: Creds): Wha
       const form = new FormData()
       form.append('messaging_product', 'whatsapp')
       form.append('type', mimeType)
-      form.append('file', new Blob([fileBuffer], { type: mimeType }), filename)
+      form.append('file', new Blob([new Uint8Array(fileBuffer)], { type: mimeType }), filename)
 
       const res = await fetch(`${BASE}/${phoneNumberId}/media`, {
         method: 'POST',
