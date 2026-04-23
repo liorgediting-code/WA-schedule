@@ -22,8 +22,13 @@ export function createContactsRouter(db: Database.Database, getClient: ClientFac
     const id = uuidv4()
     try {
       db.prepare(`INSERT INTO contacts (id, name, wa_id, type) VALUES (?, ?, ?, ?)`).run(id, name, wa_id, type)
-    } catch {
-      res.status(400).json({ error: 'wa_id already exists' })
+    } catch (err: unknown) {
+      const isUnique = err instanceof Error && err.message.includes('UNIQUE constraint failed')
+      if (isUnique) {
+        res.status(400).json({ error: 'wa_id already exists' })
+      } else {
+        res.status(500).json({ error: 'Database error' })
+      }
       return
     }
     const contact = db.prepare(`SELECT * FROM contacts WHERE id = ?`).get(id)
@@ -53,8 +58,17 @@ export function createContactsRouter(db: Database.Database, getClient: ClientFac
       res.status(404).json({ error: 'Not found' })
       return
     }
-    if (name !== undefined) db.prepare(`UPDATE contacts SET name = ? WHERE id = ?`).run(name, id)
-    if (is_favorite !== undefined) db.prepare(`UPDATE contacts SET is_favorite = ? WHERE id = ?`).run(is_favorite, id)
+
+    const fields: string[] = []
+    const values: unknown[] = []
+    if (name !== undefined) { fields.push('name = ?'); values.push(name) }
+    if (is_favorite !== undefined) { fields.push('is_favorite = ?'); values.push(is_favorite) }
+
+    if (fields.length > 0) {
+      values.push(id)
+      db.prepare(`UPDATE contacts SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+    }
+
     res.json(db.prepare(`SELECT * FROM contacts WHERE id = ?`).get(id))
   })
 
