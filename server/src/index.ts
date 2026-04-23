@@ -12,7 +12,7 @@ import { createUploadRouter } from './routes/upload.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001
 
-const db = initDb(path.join(__dirname, '../data/scheduler.db'))
+const db = initDb(path.join(__dirname, '../../data/scheduler.db'))
 
 function getClient() {
   const token = (db.prepare(`SELECT value FROM config WHERE key = 'whatsapp_access_token'`).get() as { value: string } | undefined)?.value ?? ''
